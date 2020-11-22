@@ -25,6 +25,7 @@ WaveShare_TSL2581 tsl = WaveShare_TSL2581();
 uint8_t luxFlag = -1;
 uint8_t isFirst = 1;
 unsigned long luxMass[LUXLEN];
+uint8_t night = 0;
 
 uint8_t nomLux()
 {
@@ -72,8 +73,18 @@ void updateTime()
 {
     uint16_t currentTime = 0;
     rtc.updateTimeFromRtc();
-    currentTime = (rtc.getHours() * 100) + rtc.getMinutes();
+	uint8_t hours = rtc.getHours();
+    currentTime = (hours * 100) + rtc.getMinutes();
     fillMaskByInt(currentTime);
+	
+	if(hours < 7 && hours > 23)
+	{
+		night = 1;
+	}
+	else
+	{
+		night = 0;
+	}
 }
 
 
@@ -111,6 +122,8 @@ int main(void)
     initNetwork(); 
     
     timerController.enableCounter(true);
+	
+	unsigned long lastLux = 0;
     
     sei();   
     
@@ -127,12 +140,24 @@ int main(void)
             tsl.TSL2581_Read_Channel();
             Lux = tsl.calculateLux(2, NOM_INTEG_CYCLE);
             
-            if(Lux < maxLuxValue && minBrightness + Lux * 11 <= 255)
-            {
-                currentBrightness = minBrightness + Lux * 11;
-            }
-            else currentBrightness = 0xff;
+			if(night == 1)
+			{
+				if (Lux < maxLuxValue)
+				{
+					currentBrightness = minBrightness;
+				}
+				else currentBrightness = 0xff;
+			}
+			else
+			{
+				if(Lux < maxLuxValue && minBrightness + Lux * 11 <= 255)
+				{
+					currentBrightness = minBrightness + Lux * 11;
+				}
+				else currentBrightness = 0xff;
+			}
             
+			lastLux = Lux;
             addLux(currentBrightness);
             
             WDT_reset();
@@ -166,9 +191,22 @@ int main(void)
             {
                 toBrightness = value;
             }
-            if(toBrightness < 0.2) toBrightness = 0.2;
+			double minBr = 0.2;
+            if(toBrightness < minBr) toBrightness = minBr;
             
             mainColor.v = toBrightness;
+			
+			
+			if(night == 1 && lastLux < 20)
+			{
+				mainColor.h = 0;
+				mainColor.s = 0;
+				mainColor.v = 0.01;
+			}
+			else
+			{
+				mainColor.s = 1;
+			}
             
             updateColorBrightness(mainColor);
         }
