@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+.vs/ComplexLedClock/v14/.atsuo
+*.eep
+*.elf
+*.hex
+*.lss
+*.map
+*.srec
+*.mk
+ComplexLedClock/Debug/Makefile
