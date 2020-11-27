@@ -10,7 +10,9 @@ enum settings{
   EE_MIN_BRIGHTNESS_INIT = 0,
   EE_MIN_BRIGHTNESS = 1,
   EE_MAX_LUX_RANGE_INIT = 2,
-  EE_MAX_LUX_RANGE = 3
+  EE_MAX_LUX_RANGE = 3,
+  EE_MODE_START = 4,
+  EE_MODE_LENGTH = 5
 };
 
 uint8_t readSettings(enum settings pos);

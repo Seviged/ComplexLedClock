@@ -57,4 +57,3 @@ struct cRGB hsv2rgb(hsv HSV)
 
 	return toCRGB(&RGB);
 }
-

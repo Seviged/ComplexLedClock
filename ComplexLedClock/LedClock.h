@@ -11,6 +11,7 @@
 
 #include "light_ws2812.h"
 #include "colorConverter.h"
+#include "fireGenLib.h"
 
 #define LEFT_LED_PIN    ((uint8_t)5)
 #define RIGHT_LED_PIN   ((uint8_t)7)
@@ -34,10 +35,15 @@ void intToMaskRight(int digit, uint8_t pos);
 void fillAll(struct cRGB  *ledarray, uint8_t number_of_leds, struct cRGB color);
 void fillByMask(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, struct cRGB color);
 void fillByMaskHsv(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, hsv color, uint8_t leftFlag);
+void fillBySingleColor(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, hsv color);
+void fillByPallete(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, const CRGBPalette16 &pallete);
 void fillMaskByInt(int var);
 void toggleDots();
 void updateLeds();
+
 void updateColorBrightness(hsv color);
+void fillAndUpdateByPalleteWithDelay(const CRGBPalette16 &pallete, uint8_t delay);
+void fillAndUpdateBySingleColor(const hsv &color);
 
 
 

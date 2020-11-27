@@ -14,6 +14,7 @@
 #define LIGHT_WS2812_H_
 
 #ifndef F_CPU
+//#define F_CPU 20000000UL
 #define F_CPU 8000000UL
 #endif
 

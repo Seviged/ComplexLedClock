@@ -1,5 +1,6 @@
 
 #ifndef F_CPU
+//#define F_CPU 20000000UL
 #define F_CPU 8000000UL
 #endif
 
@@ -13,43 +14,44 @@
 #include "i2c_master.h"
 #include "i2c/i2c_master.h"
 #include "ds3231/DS3231.h"
-#include "nrf24/network.h"
 #include "Settings/settings.h"
 #include "luxMeter/TSL2581.h"
+#include "SPIlib/slaveSpi.h"
+#include "workMode.h"
 
 RealTimeClock rtc;
 ProcessTimerController timerController;
 WaveShare_TSL2581 tsl = WaveShare_TSL2581();
 
-#define LUXLEN 10
-uint8_t luxFlag = -1;
-uint8_t isFirst = 1;
-unsigned long luxMass[LUXLEN];
-uint8_t night = 0;
-
-uint8_t nomLux()
-{
-    uint16_t sumLux = 0;
-    for(int i = 0; i < LUXLEN; ++i)
-    {
-        sumLux += luxMass[i];
-    }
-    
-    if (isFirst) return 255;
-    return sumLux / LUXLEN;
-}
-
-void addLux(uint8_t newLux)
-{
-    luxFlag++;
-    if (luxFlag == LUXLEN)
-    {
-        luxFlag = 0;
-        isFirst = 0;
-    }
-    
-    luxMass[luxFlag] = newLux;
-}
+//#define LUXLEN 10
+//uint8_t luxFlag = -1;
+//uint8_t isFirst = 1;
+//unsigned long luxMass[LUXLEN];
+//uint8_t night = 0;
+//
+//uint8_t nomLux()
+//{
+    //uint16_t sumLux = 0;
+    //for(int i = 0; i < LUXLEN; ++i)
+    //{
+        //sumLux += luxMass[i];
+    //}
+    //
+    //if (isFirst) return 255;
+    //return sumLux / LUXLEN;
+//}
+//
+//void addLux(uint8_t newLux)
+//{
+    //luxFlag++;
+    //if (luxFlag == LUXLEN)
+    //{
+        //luxFlag = 0;
+        //isFirst = 0;
+    //}
+    //
+    //luxMass[luxFlag] = newLux;
+//}
 
 enum Timers{
     TIMER_DISPLAY_UPDATE,
@@ -69,7 +71,7 @@ uint8_t currentBrightness = 0xff;
 double toBrightness;
 
 
-void updateTime()
+uint16_t updateTime()
 {
     uint16_t currentTime = 0;
     rtc.updateTimeFromRtc();
@@ -77,14 +79,16 @@ void updateTime()
     currentTime = (hours * 100) + rtc.getMinutes();
     fillMaskByInt(currentTime);
 	
-	if(hours < 7 && hours > 23)
-	{
-		night = 1;
-	}
-	else
-	{
-		night = 0;
-	}
+	//if(hours > 7 && hours < 23)
+	//{
+		//night = 0;
+	//}
+	//else
+	//{
+		//night = 1;
+	//}
+
+	return currentTime;
 }
 
 
@@ -118,8 +122,10 @@ int main(void)
     i2c_init();
     
     updateTime();
-    
-    initNetwork(); 
+
+	WorkMode wclock;
+
+	initSlaveSpi();
     
     timerController.enableCounter(true);
 	
@@ -130,8 +136,6 @@ int main(void)
     WDT_run_2sec();  
     while (1) 
     {
-        processNetwork();
-        
         WDT_reset();
                     
         if(timerController.isTimeReached(TIMER_LUX_UPDATE))
@@ -139,77 +143,87 @@ int main(void)
             unsigned long Lux;
             tsl.TSL2581_Read_Channel();
             Lux = tsl.calculateLux(2, NOM_INTEG_CYCLE);
+
+			wclock.onMainTimerLuxUpdate(Lux);
             
-			if(night == 1)
-			{
-				if (Lux < maxLuxValue)
-				{
-					currentBrightness = minBrightness;
-				}
-				else currentBrightness = 0xff;
-			}
-			else
-			{
-				if(Lux < maxLuxValue && minBrightness + Lux * 11 <= 255)
-				{
-					currentBrightness = minBrightness + Lux * 11;
-				}
-				else currentBrightness = 0xff;
-			}
-            
-			lastLux = Lux;
-            addLux(currentBrightness);
-            
-            WDT_reset();
+			//if(night == 1)
+			//{
+				//if (Lux < maxLuxValue)
+				//{
+					//currentBrightness = minBrightness;
+				//}
+				//else currentBrightness = 0xff;
+			//}
+			//else
+			//{
+				//if(Lux < maxLuxValue && minBrightness + Lux * 11 <= 255)
+				//{
+					//currentBrightness = minBrightness + Lux * 11;
+				//}
+				//else currentBrightness = 0xff;
+			//}
+            //
+			//lastLux = Lux;
+            //addLux(currentBrightness);
+            //
+            //WDT_reset();
         }
         if(timerController.isTimeReached(TIMER_TIME_UPDATE))
         {
-            updateTime();
+            uint16_t intTime = updateTime();
+			wclock.onMainTimerTimeUpdate(intTime);
         }
         if(timerController.isTimeReached(TIMER_CHANGE_COLOR))
         {
-            mainColor.h++;
-            if (mainColor.h > 360)
-            {
-                mainColor.h = 0;
-            }
+            //mainColor.h++;
+            //if (mainColor.h > 360)
+            //{
+                //mainColor.h = 0;
+            //}
+			wclock.onMainTimerChangeColor();
         }
         if(timerController.isTimeReached(TIMER_BLINK_DOT))
         {
-            double value = (double)nomLux() / 0xFF;
-            
-            const double pitch = 0.01;
-            if (toBrightness > value - pitch)
-            {
-                toBrightness -= pitch;
-            }
-            else if(toBrightness < value + pitch)
-            {
-                toBrightness += pitch;
-            }
-            else
-            {
-                toBrightness = value;
-            }
-			double minBr = 0.2;
-            if(toBrightness < minBr) toBrightness = minBr;
-            
-            mainColor.v = toBrightness;
-			
-			
-			if(night == 1 && lastLux < 20)
-			{
-				mainColor.h = 0;
-				mainColor.s = 0;
-				mainColor.v = 0.01;
-			}
-			else
-			{
-				mainColor.s = 1;
-			}
-            
-            updateColorBrightness(mainColor);
+			wclock.onMainTimerBlinkDot();
+
+            //double value = (double)nomLux() / 0xFF;
+            //
+            //const double pitch = 0.01;
+            //if (toBrightness > value - pitch)
+            //{
+                //toBrightness -= pitch;
+            //}
+            //else if(toBrightness < value + pitch)
+            //{
+                //toBrightness += pitch;
+            //}
+            //else
+            //{
+                //toBrightness = value;
+            //}
+			//double minBr = 0.2;
+            //if(toBrightness < minBr) toBrightness = minBr;
+            //
+            //mainColor.v = toBrightness;
+			//
+			//
+			//if(night == 1 && lastLux < 20)
+			//{
+				//mainColor.h = 0;
+				//mainColor.s = 0;
+				//mainColor.v = 0.01;
+			//}
+			//else
+			//{
+				//mainColor.s = 1;
+			//}
+            //
+            //updateColorBrightness(mainColor);
+			//fireLineNoise();
         }
+		
+		parseBuffer();
+		
         WDT_reset();
     }
 }

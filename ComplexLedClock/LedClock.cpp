@@ -6,6 +6,7 @@
  */ 
 
 #include "LedClock.h"
+#include "fireGenLib.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <util/delay.h>
@@ -23,6 +24,9 @@ uint8_t rightMask[LEDS];
 
 hsv left;
 hsv right;
+
+int counter = 13531;
+
 
 
 void clearMask(enum maskSide side, uint8_t pos)
@@ -332,6 +336,46 @@ void fillByMaskHsv(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_led
 	}
 }
 
+
+void fillByPallete(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, const CRGBPalette16 &pallete)
+{
+	struct cRGB blank;
+	blank.r = 0;
+	blank.g = 0;
+	blank.b = 0;
+
+	for(uint8_t i = 0; i < number_of_leds; ++i)
+	{
+		struct cRGB clr = blank;
+		if(mask[i] != 0)
+		{
+			clr = ColorFromPalette(pallete, (inoise8(i * 15, counter)), 255);
+			counter += 1;
+		}
+
+		ledarray[i] = clr;
+	}
+}
+
+void fillBySingleColor(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, hsv color)
+{
+	struct cRGB blank;
+	blank.r = 0;
+	blank.g = 0;
+	blank.b = 0;
+
+	for(uint8_t i = 0; i < number_of_leds; ++i)
+	{
+		struct cRGB clr = blank;
+		if(mask[i] != 0)
+		{
+			clr = hsv2rgb(color);
+		}
+
+		ledarray[i] = clr;
+	}
+}
+
 void fillMaskByInt(int var)
 {
 	intToMaskRight(var % 10, 1);
@@ -369,4 +413,24 @@ void updateColorBrightness(hsv color)
     fillByMaskHsv(rightMass, rightMask, LEDS, color, 0);
     
     updateLeds();
+}
+
+void fillAndUpdateByPalleteWithDelay(const CRGBPalette16 &pallete, uint8_t delay)
+{
+	fillByPallete(leftMass, leftMask, LEDS, pallete);
+	fillByPallete(rightMass, rightMask, LEDS, pallete);
+	
+	updateLeds();
+	for(uint8_t i = 0; i < delay; ++i)
+	{
+		_delay_ms(1);
+	}
+}
+
+void fillAndUpdateBySingleColor(const hsv &color)
+{
+	fillBySingleColor(leftMass, leftMask, LEDS, color);
+	fillBySingleColor(rightMass, rightMask, LEDS, color);
+	
+	updateLeds();
 }
