@@ -1,10 +1,3 @@
-/*
- * workMode.cpp
- *
- * Created: 27.11.2020 23:44:06
- *  Author: Seviged
- */ 
-
 #include "workMode.h"
 #include "Settings/settings.h"
 #include "Watchdog/watchdog.h"
@@ -45,34 +38,39 @@ void _addLux(uint8_t newLux)
 	_luxMass[_luxFlag] = newLux;
 }
 
-PalleteDefs fireDefines()
+NoizeModeDefs fireDefines()
 {
-	PalleteDefs fireDefs;
+	NoizeModeDefs fireDefs;
 	fireDefs.hue_start = 15;
 	fireDefs.hue_gap = 45;
 	fireDefs.minBright = 0.5;
 	fireDefs.maxBright = 1;
 	fireDefs.minSat = 0.9;
 	fireDefs.maxSat = 1;
+	fireDefs.correctBrightness = false;
+	fireDefs.delay = 20;
 	return fireDefs;
 }
 
-PalleteDefs discoDefines()
+NoizeModeDefs discoDefines()
 {
-	PalleteDefs fireDefs;
+	NoizeModeDefs fireDefs;
 	fireDefs.hue_start = 0;
 	fireDefs.hue_gap = 360;
 	fireDefs.minBright = 0.5;
 	fireDefs.maxBright = 1;
 	fireDefs.minSat = 0.9;
 	fireDefs.maxSat = 1;
+	fireDefs.correctBrightness = true;
+	fireDefs.delay = 30;
 	return fireDefs;
 }
 
-WorkModeNoise fireNoizMode(fireDefines(), 20);
-WorkModeNoise discoNoizMode(discoDefines(), 30);
+
 WorkModeSimple simpleMode;
 WorkModeStatic staticMode;
+WorkModeNoise  noizeMode;
+
 
 WorkMode::WorkMode()
 {
@@ -81,30 +79,24 @@ WorkMode::WorkMode()
 	_currentBrightness = 0xFF;
 	_toBrightness = 0.2;
 
-	
-	defaultMode = &simpleMode;
-	mode = defaultMode;
-	_handMode = false;
+	_addModes();
+
+	setMode(0);
 }
 
-void WorkMode::_changeMode(uint8_t nextmode)
+void WorkMode::_changeMode(ModeType nextmode)
 {
-	_handMode = true;
-	if (nextmode == 1)
+	if (nextmode == MODE_NOIZE)
+	{
+		mode = &noizeMode;
+	}
+	else if (nextmode == MODE_SIMPLE)
+	{
+		mode = &simpleMode;	
+	}
+	else //(nextmode == MODE_STATIC)
 	{
 		mode = &staticMode;
-	}
-	else if (nextmode == 2)
-	{
-		mode = &fireNoizMode;	
-	}
-	else if (nextmode == 3)
-	{
-		mode = &discoNoizMode;
-	}
-	else
-	{
-		mode = defaultMode;
 	}
 }
 
@@ -126,27 +118,21 @@ void WorkMode::onMainTimerLuxUpdate(unsigned long Lux)
 
 void WorkMode::onMainTimerTimeUpdate(uint16_t intTime)
 {
-	if(_handMode)
-	{
-		WDT_reset();
-		return;
-	}
-
 	if(intTime > 830 && intTime < 1030)
 	{
-		mode = &fireNoizMode;	
+		setMode(2);
 	}
-	else if (intTime > 1500 && intTime < 1800)
+	else if (intTime > 1500 && intTime < 1515)
 	{
-		mode = &discoNoizMode;
+		setMode(3);
 	}
 	else if (intTime > 2300 || intTime < 700)
 	{
-		mode = &staticMode;
+		setMode(0);
 	}
 	else
 	{
-		mode = defaultMode;
+		setMode(1);
 	}
 	//change modes here
 	WDT_reset();
@@ -176,9 +162,8 @@ void WorkMode::onMainTimerBlinkDot()
 	{
 		_toBrightness = value;
 	}
-	static const double minBr = 0.22;
+
 	static const double maxBr = 1.0;
-	if(_toBrightness < minBr) _toBrightness = minBr;
 	if(_toBrightness > maxBr) _toBrightness = maxBr;
 
 	/// call children mode with Lux and _toBrightness
@@ -187,7 +172,37 @@ void WorkMode::onMainTimerBlinkDot()
 	WDT_reset();
 }
 
+void WorkMode::setMode(uint8_t mod)
+{
+	if (mod == _storage.getLastModeNumber())
+	{
+		return;
+	}
+
+	auto currentMode = _storage.getMode(mod);
+	_changeMode(currentMode.type);
+	mode->loadMode(currentMode);
+}
+
 void WorkMode::_addModes()
 {
+	ModeDescription fire;
+	fire.type = MODE_NOIZE;
+	fire.data.noizeDefs = fireDefines();
 
+	ModeDescription disco;
+	disco.type = MODE_NOIZE;
+	disco.data.noizeDefs = discoDefines();
+
+	ModeDescription simple;
+	simple.type = MODE_SIMPLE;
+	hsv clr;
+	clr.h = 0;
+	clr.s = 1;
+    clr.v = 0.2;
+	simple.data.simpleDefs.color = clr;
+
+	_storage.addMode(simple);	//1
+	_storage.addMode(fire);		//2
+	_storage.addMode(disco);	//3
 }

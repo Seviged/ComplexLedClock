@@ -1,11 +1,3 @@
-/*
- * utils.h
- *
- * Created: 27.11.2020 23:31:32
- *  Author: Seviged
- */ 
-
-
 #ifndef UTILS_H_
 #define UTILS_H_
 

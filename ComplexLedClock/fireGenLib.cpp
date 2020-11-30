@@ -45,7 +45,7 @@ PROGMEM static uint8_t const p[] = { 151,160,137,91,90,15,
 //#define MIN_SAT 0.90     //180     // мин. насыщенность
 //#define MAX_SAT 1       //240     // макс. насыщенность
 
-cRGB getFireColor(int val, PalleteDefs defs) 
+cRGB getFireColor(int val, NoizeModeDefs defs) 
 {
 	hsv col;
 	col.h = defs.hue_start + mapf(val, 0, 255, 0, defs.hue_gap);

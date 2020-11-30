@@ -11,25 +11,29 @@
 
 #include <avr/io.h>
 #include "LedClock.h"
+#include "ModeDefines.h"
+#include "Modes/ModeStorage.h"
+
 
 class WorkModeInterface
 {
 public:
 	virtual void onTimerChangeColor() = 0;
 	virtual void onTimerBlinkDot(const unsigned long &lux, const double &toBrightness) = 0;
+	virtual void loadMode(const ModeDescription &descr) = 0;
 };
 
 class WorkMode
 {
 public:
 	WorkMode();
-	void _changeMode(uint8_t mode);
+	void _changeMode(ModeType mode);
 	void onMainTimerLuxUpdate(unsigned long Lux);
 	void onMainTimerTimeUpdate(uint16_t intTime);
 	void onMainTimerChangeColor();
 	void onMainTimerBlinkDot();
 
-	unsigned long getLastLux() {return _lastLux;}
+	void setMode(uint8_t mod);
 	
 private:
 	void _addModes();
@@ -44,9 +48,8 @@ private:
 	double _toBrightness;
 
 	WorkModeInterface *mode;
-	WorkModeInterface *defaultMode;
 
-	bool _handMode;
+	ModeStorage _storage;
 };
 
 

@@ -14,12 +14,14 @@
 class WorkModeNoise : public WorkModeInterface
 {
 public:
-	WorkModeNoise(const PalleteDefs &defs, uint8_t delay);
-	void onTimerChangeColor() {}
-	void onTimerBlinkDot(const unsigned long &lux, const double &toBrightness);
+	WorkModeNoise();
+	void onTimerChangeColor() override {}
+	void onTimerBlinkDot(const unsigned long &lux, const double &toBrightness) override;
+	void loadMode(const ModeDescription &descr) override;
 private:
 	CRGBPalette16 pallete;
 	uint8_t _delay;
+	bool _correctBrightness = false;
 };
 
 

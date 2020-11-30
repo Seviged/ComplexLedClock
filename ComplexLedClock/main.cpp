@@ -23,36 +23,6 @@ RealTimeClock rtc;
 ProcessTimerController timerController;
 WaveShare_TSL2581 tsl = WaveShare_TSL2581();
 
-//#define LUXLEN 10
-//uint8_t luxFlag = -1;
-//uint8_t isFirst = 1;
-//unsigned long luxMass[LUXLEN];
-//uint8_t night = 0;
-//
-//uint8_t nomLux()
-//{
-    //uint16_t sumLux = 0;
-    //for(int i = 0; i < LUXLEN; ++i)
-    //{
-        //sumLux += luxMass[i];
-    //}
-    //
-    //if (isFirst) return 255;
-    //return sumLux / LUXLEN;
-//}
-//
-//void addLux(uint8_t newLux)
-//{
-    //luxFlag++;
-    //if (luxFlag == LUXLEN)
-    //{
-        //luxFlag = 0;
-        //isFirst = 0;
-    //}
-    //
-    //luxMass[luxFlag] = newLux;
-//}
-
 enum Timers{
     TIMER_DISPLAY_UPDATE,
     TIMER_LUX_UPDATE,
@@ -78,15 +48,6 @@ uint16_t updateTime()
 	uint8_t hours = rtc.getHours();
     currentTime = (hours * 100) + rtc.getMinutes();
     fillMaskByInt(currentTime);
-	
-	//if(hours > 7 && hours < 23)
-	//{
-		//night = 0;
-	//}
-	//else
-	//{
-		//night = 1;
-	//}
 
 	return currentTime;
 }
@@ -145,28 +106,6 @@ int main(void)
             Lux = tsl.calculateLux(2, NOM_INTEG_CYCLE);
 
 			wclock.onMainTimerLuxUpdate(Lux);
-            
-			//if(night == 1)
-			//{
-				//if (Lux < maxLuxValue)
-				//{
-					//currentBrightness = minBrightness;
-				//}
-				//else currentBrightness = 0xff;
-			//}
-			//else
-			//{
-				//if(Lux < maxLuxValue && minBrightness + Lux * 11 <= 255)
-				//{
-					//currentBrightness = minBrightness + Lux * 11;
-				//}
-				//else currentBrightness = 0xff;
-			//}
-            //
-			//lastLux = Lux;
-            //addLux(currentBrightness);
-            //
-            //WDT_reset();
         }
         if(timerController.isTimeReached(TIMER_TIME_UPDATE))
         {
@@ -175,51 +114,11 @@ int main(void)
         }
         if(timerController.isTimeReached(TIMER_CHANGE_COLOR))
         {
-            //mainColor.h++;
-            //if (mainColor.h > 360)
-            //{
-                //mainColor.h = 0;
-            //}
 			wclock.onMainTimerChangeColor();
         }
         if(timerController.isTimeReached(TIMER_BLINK_DOT))
         {
 			wclock.onMainTimerBlinkDot();
-
-            //double value = (double)nomLux() / 0xFF;
-            //
-            //const double pitch = 0.01;
-            //if (toBrightness > value - pitch)
-            //{
-                //toBrightness -= pitch;
-            //}
-            //else if(toBrightness < value + pitch)
-            //{
-                //toBrightness += pitch;
-            //}
-            //else
-            //{
-                //toBrightness = value;
-            //}
-			//double minBr = 0.2;
-            //if(toBrightness < minBr) toBrightness = minBr;
-            //
-            //mainColor.v = toBrightness;
-			//
-			//
-			//if(night == 1 && lastLux < 20)
-			//{
-				//mainColor.h = 0;
-				//mainColor.s = 0;
-				//mainColor.v = 0.01;
-			//}
-			//else
-			//{
-				//mainColor.s = 1;
-			//}
-            //
-            //updateColorBrightness(mainColor);
-			//fireLineNoise();
         }
 		
 		parseBuffer();

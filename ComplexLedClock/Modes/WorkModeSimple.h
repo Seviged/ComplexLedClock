@@ -15,8 +15,9 @@ class WorkModeSimple : public WorkModeInterface
 {
 public:
 	WorkModeSimple();
-	void onTimerChangeColor();
-	void onTimerBlinkDot(const unsigned long &lux, const double &toBrightness);
+	void onTimerChangeColor() override;
+	void onTimerBlinkDot(const unsigned long &lux, const double &toBrightness) override;
+	void loadMode(const ModeDescription &descr) override;
 private:
 	hsv color;
 };

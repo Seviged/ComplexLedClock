@@ -1,28 +1,14 @@
-/*
- * fireGenLib.h
- *
- * Created: 27.11.2020 23:25:18
- *  Author: Seviged
- */ 
-
-
 #ifndef FIREGENLIB_H_
 #define FIREGENLIB_H_
 
 #include "colorConverter.h"
+#include "ModeDefines.h"
 
 class CRGBPalette16;
 
-typedef struct {
-	double hue_start;
-	double hue_gap;
-	double minBright;
-	double maxBright;
-	double minSat;
-	double maxSat;
-} PalleteDefs;
 
-cRGB getFireColor(int val, PalleteDefs defs);
+
+cRGB getFireColor(int val, NoizeModeDefs defs);
 
 uint8_t scale8_LEAVING_R1_DIRTY( uint8_t i, uint8_t scale);
 uint8_t scale8( uint8_t i, uint8_t scale);

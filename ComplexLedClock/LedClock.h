@@ -36,13 +36,13 @@ void fillAll(struct cRGB  *ledarray, uint8_t number_of_leds, struct cRGB color);
 void fillByMask(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, struct cRGB color);
 void fillByMaskHsv(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, hsv color, uint8_t leftFlag);
 void fillBySingleColor(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, hsv color);
-void fillByPallete(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, const CRGBPalette16 &pallete);
+void fillByPallete(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, const CRGBPalette16 &pallete, uint8_t brightness);
 void fillMaskByInt(int var);
 void toggleDots();
 void updateLeds();
 
 void updateColorBrightness(hsv color);
-void fillAndUpdateByPalleteWithDelay(const CRGBPalette16 &pallete, uint8_t delay);
+void fillAndUpdateByPalleteWithDelay(const CRGBPalette16 &pallete, uint8_t delay, uint8_t brightness);
 void fillAndUpdateBySingleColor(const hsv &color);
 
 

@@ -337,7 +337,7 @@ void fillByMaskHsv(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_led
 }
 
 
-void fillByPallete(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, const CRGBPalette16 &pallete)
+void fillByPallete(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_leds, const CRGBPalette16 &pallete, uint8_t brightness)
 {
 	struct cRGB blank;
 	blank.r = 0;
@@ -349,7 +349,7 @@ void fillByPallete(struct cRGB  *ledarray, uint8_t *mask, uint16_t number_of_led
 		struct cRGB clr = blank;
 		if(mask[i] != 0)
 		{
-			clr = ColorFromPalette(pallete, (inoise8(i * 15, counter)), 255);
+			clr = ColorFromPalette(pallete, (inoise8(i * 15, counter)), brightness);
 			counter += 1;
 		}
 
@@ -415,10 +415,10 @@ void updateColorBrightness(hsv color)
     updateLeds();
 }
 
-void fillAndUpdateByPalleteWithDelay(const CRGBPalette16 &pallete, uint8_t delay)
+void fillAndUpdateByPalleteWithDelay(const CRGBPalette16 &pallete, uint8_t delay, uint8_t brightness)
 {
-	fillByPallete(leftMass, leftMask, LEDS, pallete);
-	fillByPallete(rightMass, rightMask, LEDS, pallete);
+	fillByPallete(leftMass, leftMask, LEDS, pallete, brightness);
+	fillByPallete(rightMass, rightMask, LEDS, pallete, brightness);
 	
 	updateLeds();
 	for(uint8_t i = 0; i < delay; ++i)
