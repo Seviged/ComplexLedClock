@@ -18,10 +18,12 @@
 #include "luxMeter/TSL2581.h"
 #include "SPIlib/slaveSpi.h"
 #include "workMode.h"
+#include "uart/serial.h"
 
 RealTimeClock rtc;
 ProcessTimerController timerController;
 WaveShare_TSL2581 tsl = WaveShare_TSL2581();
+
 
 enum Timers{
     TIMER_DISPLAY_UPDATE,
@@ -90,14 +92,16 @@ int main(void)
     
     timerController.enableCounter(true);
 	
-	unsigned long lastLux = 0;
-    
+	//unsigned long lastLux = 0;
+    startSerial(38400, F_CPU, &rtc);
     sei();   
     
     WDT_run_2sec();  
     while (1) 
     {
         WDT_reset();
+		processSerial();
+		WDT_reset();
                     
         if(timerController.isTimeReached(TIMER_LUX_UPDATE))
         {
